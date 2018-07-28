@@ -9,20 +9,23 @@ import tushare as ts
 class stock_monitor:
     def __init__(self):
         #股价监测
-        pass
+        self.lists=[]
     def start(self):
         try:
             while True:
                 times = datetime.datetime.now()
-                if times.hour in [9,10,11,13,14]:
+                if times.hour in [9,10,11,12,13,14]:
                     #返回配置文件信息
                     with open(r"stock_list.json",'r') as load_f:
                         load_dict = json.load(load_f)
                     for i in load_dict['stock_list']:
-                        self.mains(i)
-                    time.sleep(10)
+                        if i not in self.lists:
+                            self.mains(i)
+                    time.sleep(15)
+                elif times.hour>14:
+                    break
                 else:
-                    time.sleep(60)
+                    time.sleep(80)
         except Exception as e:
             pass
     def mains(self,stock_code):
@@ -39,6 +42,7 @@ class stock_monitor:
         if change>5 or change<-5:
             tests='股票: %s 当前价格:  %s ,涨跌幅: %%%s ,成交量:  %s,时间: %s'%(data[5],data[7],change,self.to_chinese(int(Amount)),datetime.datetime.now())
             print(tests)
+            self.lists.append(stock_code)
         #totals=(dfs.ix[stock_code]['totals'])
         #print(float(data[7])*totals)
     def to_chinese(self,number):

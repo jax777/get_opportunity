@@ -28,7 +28,7 @@ class stock_monitor:
                 else:
                     time.sleep(80)
         except Exception as e:
-            pass
+            print(e)
     def mains(self,stock_code):
         print(stock_code)
         df = ts.get_realtime_quotes(stock_code) #Single stock symbol
@@ -59,8 +59,8 @@ class stock_monitor:
             s.sendmail('1642629605@qq.com', '635713319@qq.com', msg.as_string())
             s.quit()
             print("Success!")
-        except :
-            pass
+        except Exception as e:
+            print(e)
     def to_chinese(self,number):
         """ convert integer to Chinese numeral """
         chinese_numeral_dict = {

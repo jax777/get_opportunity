@@ -4,12 +4,13 @@ Created on 2018年7月28日
 
 @author: guimaizi
 '''
-import json,time,datetime
+import json,time,datetime,smtplib
 import tushare as ts
+from email.mime.text import MIMEText
 class stock_monitor:
     def __init__(self):
         #股价监测
-        pass
+        self.lists=[]
     def start(self):
         try:
             while True:
@@ -19,13 +20,17 @@ class stock_monitor:
                     with open(r"stock_list.json",'r') as load_f:
                         load_dict = json.load(load_f)
                     for i in load_dict['stock_list']:
-                        self.mains(i)
-                    time.sleep(10)
+                        if i not in self.lists:
+                            self.mains(i)
+                    time.sleep(15)
+                elif times.hour>14:
+                    break
                 else:
-                    time.sleep(60)
+                    time.sleep(80)
         except Exception as e:
             pass
     def mains(self,stock_code):
+        print(stock_code)
         df = ts.get_realtime_quotes(stock_code) #Single stock symbol
         dfs = ts.get_stock_basics()
         data=str(df[['name','pre_close','price','amount']]).split()
@@ -39,8 +44,24 @@ class stock_monitor:
         if change>5 or change<-5:
             tests='股票: %s 当前价格:  %s ,涨跌幅: %%%s ,成交量:  %s,时间: %s'%(data[5],data[7],change,self.to_chinese(int(Amount)),datetime.datetime.now())
             print(tests)
+            self.send(str(tests))
+            self.lists.append(stock_code)
         #totals=(dfs.ix[stock_code]['totals'])
         #print(float(data[7])*totals)
+    def send(self,texter):
+        #text=','.join(texter)
+        msg = MIMEText(texter)
+        msg["Subject"] = "股票监控"
+        msg["From"] = '1642629605@qq.com'
+        msg["To"] = '635713319@qq.com'
+        try:
+            s = smtplib.SMTP_SSL("smtp.qq.com", 465)
+            s.login('1642629605@qq.com', 'xiuqtothwbrpbeee')
+            s.sendmail('1642629605@qq.com', '635713319@qq.com', msg.as_string())
+            s.quit()
+            print("Success!")
+        except :
+            pass
     def to_chinese(self,number):
         """ convert integer to Chinese numeral """
         chinese_numeral_dict = {
@@ -83,6 +104,7 @@ class stock_monitor:
                 result_lst.pop(result_lst.index(unit_sep))
                 flag -= 1
         return ''.join(result_lst)
+
 if __name__=='__main__':
     itme=stock_monitor()
     itme.start()

@@ -7,6 +7,7 @@ Created on 2018年7月28日
 import json,time,datetime,smtplib
 import tushare as ts
 from email.mime.text import MIMEText
+from apscheduler.schedulers.blocking import BlockingScheduler
 class stock_monitor:
     def __init__(self):
         #股价监测
@@ -14,21 +15,25 @@ class stock_monitor:
     def start(self):
         try:
             while True:
-                times = datetime.datetime.now()
-                if times.hour in [9,10,11,12,13,14]:
-                    #返回配置文件信息
-                    with open(r"stock_list.json",'r') as load_f:
-                        load_dict = json.load(load_f)
-                    for i in load_dict['stock_list']:
-                        if i not in self.lists:
-                            self.mains(i)
-                    time.sleep(15)
-                elif times.hour>14:
-                    break
-                else:
-                    time.sleep(80)
+                try:
+                    times = datetime.datetime.now()
+                    if times.hour in [9,10,11,13,14,16]:
+                        #返回配置文件信息
+                        with open(r"stock_list.json",'r') as load_f:
+                            load_dict = json.load(load_f)
+                        for i in load_dict['stock_list']:
+                            if i not in self.lists:
+                                self.mains(i)
+                        time.sleep(15)
+                    elif times.hour>14:
+                        self.lists=[]
+                        return 1
+                    else:
+                        time.sleep(80)
+                except:continue
         except Exception as e:
             print(e)
+            
     def mains(self,stock_code):
         print(stock_code)
         df = ts.get_realtime_quotes(stock_code) #Single stock symbol
@@ -40,7 +45,7 @@ class stock_monitor:
         else:
             Amount=money
         change=round((float(data[7])-float(data[6]))/float(data[6])*100,2)
-        if change>5 or change<-5:
+        if change>3 or change<-3:
             tests='股票: %s 当前价格:  %s ,涨跌幅: %%%s ,成交量:  %s,时间: %s'%(data[5],data[7],change,self.to_chinese(int(Amount)),datetime.datetime.now())
             print(tests)
             self.send(str(tests))
@@ -107,3 +112,8 @@ class stock_monitor:
 if __name__=='__main__':
     itme=stock_monitor()
     itme.start()
+    '''
+    scheduler = BlockingScheduler()
+    scheduler.add_job(itme.start, 'cron', day_of_week='0-6', hour=16, minute=31)
+    scheduler.start()
+    '''

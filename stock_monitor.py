@@ -1,70 +1,11 @@
 # coding: utf-8
 '''
-Created on 2018年7月28日
 
-@author: guimaizi
+@author: rasca1
 '''
-import json,time,datetime,smtplib
-import tushare as ts
-from email.mime.text import MIMEText
-class stock_monitor:
-    def __init__(self):
-        #股价监测
-        self.lists=[]
-    def start(self):
-        try:
-            while True:
-                times = datetime.datetime.now()
-                if times.hour in [9,10,11,12,13,14]:
-                    #返回配置文件信息
-                    with open(r"stock_list.json",'r') as load_f:
-                        load_dict = json.load(load_f)
-                    for i in load_dict['stock_list']:
-                        if i not in self.lists:
-                            self.mains(i)
-                    time.sleep(15)
-                elif times.hour>14:
-                    break
-                else:
-                    time.sleep(80)
-        except Exception as e:
-            pass
-    def mains(self,stock_code):
-        print(stock_code)
-        df = ts.get_realtime_quotes(stock_code) #Single stock symbol
-        dfs = ts.get_stock_basics()
-        data=str(df[['name','pre_close','price','amount']]).split()
-        #print(data)
-        money=int(float(data[-1]))
-        if int(money)>5:
-            Amount=round(money/10000,0)*10000
-        else:
-            Amount=money
-        change=round((float(data[7])-float(data[6]))/float(data[6])*100,2)
-        if change>5 or change<-5:
-            tests='股票: %s 当前价格:  %s ,涨跌幅: %%%s ,成交量:  %s,时间: %s'%(data[5],data[7],change,self.to_chinese(int(Amount)),datetime.datetime.now())
-            print(tests)
-<<<<<<< HEAD
-            self.send(str(tests))
-=======
->>>>>>> branch 'master' of https://github.com/guimaizi/get_opportunity
-            self.lists.append(stock_code)
-        #totals=(dfs.ix[stock_code]['totals'])
-        #print(float(data[7])*totals)
-    def send(self,texter):
-        #text=','.join(texter)
-        msg = MIMEText(texter)
-        msg["Subject"] = "股票监控"
-        msg["From"] = '1642629605@qq.com'
-        msg["To"] = '635713319@qq.com'
-        try:
-            s = smtplib.SMTP_SSL("smtp.qq.com", 465)
-            s.login('1642629605@qq.com', 'xiuqtothwbrpbeee')
-            s.sendmail('1642629605@qq.com', '635713319@qq.com', msg.as_string())
-            s.quit()
-            print("Success!")
-        except :
-            pass
+import tushare as ts,subprocess,pyttsx3
+from asyncio.tasks import sleep
+class Stock_reporting:
     def to_chinese(self,number):
         """ convert integer to Chinese numeral """
         chinese_numeral_dict = {
@@ -97,6 +38,7 @@ class stock_monitor:
                 if result_lst and result_lst[-1] != '零':
                     result_lst.append('零')
                 unit += 1
+    
         result_lst.reverse()
         if result_lst[-1] is '零':
             result_lst.pop()
@@ -107,7 +49,28 @@ class stock_monitor:
                 result_lst.pop(result_lst.index(unit_sep))
                 flag -= 1
         return ''.join(result_lst)
-
+    def say(self,text):
+        #res=subprocess.call('say ' + text,shell=True)
+        print(text)
+        engine = pyttsx3.init();
+        engine.say(text);
+        engine.runAndWait() ;
+    def mains(self,stock_code):
+        df = ts.get_realtime_quotes(stock_code) #Single stock symbol
+        dfs = ts.get_stock_basics()
+        data=str(df[['name','pre_close','price','amount']]).split()
+        #print(data)
+        money=int(float(data[-1]))
+        if int(money)>5:
+            Amount=round(money/10000,0)*10000
+        else:
+            Amount=money
+        tests='股票 %s 当前价格  %s ,涨跌幅 %%%s ,成交量  %s'%(data[5],data[7],round((float(data[7])-float(data[6]))/float(data[6])*100,2),self.to_chinese(int(Amount)))
+        print(tests)
+        totals=(dfs.ix[stock_code]['totals'])
+        print(float(data[7])*totals)
+        #self.say(tests)
 if __name__=='__main__':
-    itme=stock_monitor()
-    itme.start()
+    itme=Stock_reporting()
+    for i in ['600887','601607']:
+        itme.mains(i)

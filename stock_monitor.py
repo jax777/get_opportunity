@@ -17,7 +17,7 @@ class stock_monitor:
             while True:
                 try:
                     times = datetime.datetime.now()
-                    if times.hour in [9,10,11,13,14,16]:
+                    if times.hour in [9,10,11,13,14]:
                         #返回配置文件信息
                         with open(r"stock_list.json",'r') as load_f:
                             load_dict = json.load(load_f)
@@ -25,8 +25,10 @@ class stock_monitor:
                             if i not in self.lists:
                                 self.mains(i)
                         time.sleep(15)
+                        load_dict=[]
                     elif times.hour>14:
                         self.lists=[]
+                        print(11111)
                         return 1
                     else:
                         time.sleep(80)
@@ -35,7 +37,6 @@ class stock_monitor:
             print(e)
             
     def mains(self,stock_code):
-        print(stock_code)
         df = ts.get_realtime_quotes(stock_code) #Single stock symbol
         dfs = ts.get_stock_basics()
         data=str(df[['name','pre_close','price','amount']]).split()
@@ -111,9 +112,7 @@ class stock_monitor:
 
 if __name__=='__main__':
     itme=stock_monitor()
-    itme.start()
-    '''
+    #itme.start()
     scheduler = BlockingScheduler()
-    scheduler.add_job(itme.start, 'cron', day_of_week='0-6', hour=16, minute=31)
+    scheduler.add_job(itme.start, 'cron', day_of_week='mon-fri', hour=11, minute=49)
     scheduler.start()
-    '''

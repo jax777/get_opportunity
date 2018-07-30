@@ -62,7 +62,7 @@ class stock_monitor:
         try:
             s = smtplib.SMTP_SSL("smtp.qq.com", 465)
             s.login('1642629605@qq.com', 'xiuqtothwbrpbeee')
-            s.sendmail('1642629605@qq.com', '635713319@qq.com', msg.as_string())
+            s.sendmail('1642629605@qq.com', 'admin@guimaizi.com', msg.as_string())
             s.quit()
             print("Success!")
         except Exception as e:
